@@ -1,0 +1,22 @@
+{
+  "name": "sudoku-solver",
+  "version": "1.0.0",
+  "description": "A sudoku solver written for Portland Code School Javascript Immersion Course",
+  "main": "sudoku-solver.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mikeatgl/sudoku-solver.git"
+  },
+  "author": "BryceWJohnson and Mike Burnett",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mikeatgl/sudoku-solver/issues"
+  },
+  "homepage": "https://github.com/mikeatgl/sudoku-solver",
+  "dependencies": {
+    "set": "^1.1.1"
+  }
+}

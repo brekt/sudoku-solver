@@ -1,6 +1,9 @@
 // this is the sudoku module
 
 var Square = require('./square');
+var Box = require('./puzzleElements').Box;
+var Row = require('./puzzleElements').Row;
+var Col = require('./puzzleElements').Col;
 
 // This is the puzzle constructor with methods to initialize and solve the puzzle.
 
@@ -9,6 +12,20 @@ function Sudoku(input) {
     return null;
   }
   var squareArray = [];
+  var boxArray = [];
+  var rowArray = [];
+  var colArray = [];
+
+  for (var i = 0; i < 9; i++) {
+    var box = new Box(i);
+    var row = new Row(i);
+    var col = new Col(i);
+    boxArray.push(box);
+    rowArray.push(row);
+    colArray.push(col);
+  }
+//  console.log(boxArray, rowArray, colArray);
+
   var inputInts = input.split('').map(function(value) {          // split input into array w/ answers where present and null otherwise
     if (value === '.' || value === ' ') {
       return null;
@@ -20,23 +37,34 @@ function Sudoku(input) {
   
   inputInts.forEach(function(value, index) {       // create a new 'square' object for each cell and push them to an array
     var square = new Square(value, index);
+    if(value){
+      boxArray[square.box].setMember(value);
+      rowArray[square.row].setMember(value);
+      colArray[square.col].setMember(value);
+    }
     squareArray.push(square); 
   });
+  
 
   this.solve = function() {
     var loopCount = 0;
     while (this.report() < 81 && loopCount < 2) {       // loop over the puzzle until it is solved or no further answers can be found.
       squareArray.forEach(function(square) {           
-	if (square.answer === null) {          // compare unsolved squares with all squares in same row, box, or column that have an answer.
+	if (square.answer === null) {          // compare unsolved squares with all squares in same row, box, or col that have an answer.
 	  squareArray.forEach(function(checkSquare) {
-	    if (checkSquare.answer !== null && square.possibilities[checkSquare.answer]) { 
-	      if (checkSquare.column === square.column || checkSquare.row === square.row || checkSquare.box === square.box) {
-		delete square.possibilities[checkSquare.answer];    // if a num is already taken, remove it as a possibility from square
+	    if (checkSquare.answer !== null && square.possibilities.contains(checkSquare.answer)) { 
+	      if (checkSquare.col === square.col || checkSquare.row === square.row || checkSquare.box === square.box) {
+		square.possibilities.remove(checkSquare.answer);    // if a num is already taken, remove it as a possibility from square
 		loopCount = 0;                                      // if the puzzle has been altered, set loopCount back to zero
 	      }
 	    }
-	  });	
-	  square.squareSolve();                 // set the square's answer if only one possible number remains
+	  });
+	  var newAnswer = square.squareSolve();                     // set the square's answer if only one possible number remains
+	  if(newAnswer){
+	    boxArray[square.box].setMember(newAnswer);
+	    rowArray[square.row].setMember(newAnswer);
+	    colArray[square.col].setMember(newAnswer);
+	  }
 	}
       });
       loopCount++;                            // increment loopCount
@@ -51,6 +79,10 @@ function Sudoku(input) {
       }
     });
     return answerArray.length;
+  };
+
+  this.boxPrint = function() {
+    console.log(boxArray);
   };
 
   this.printPuzzle = function() {              // print a nicely formatted sudoku to the console
