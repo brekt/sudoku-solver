@@ -5,6 +5,7 @@ var Set = require('set');
 exports.Box = function(id){
   this.id = id;
   this.members = new Set([]);
+  this.squares = [];
 
   this.setMember = function(number){
     this.members.add(number);
@@ -15,6 +16,7 @@ exports.Box = function(id){
 exports.Row = function(id){
   this.id = id;
   this.members = new Set([]);
+  this.squares = [];
 
   this.setMember = function(number){
     this.members.add(number);
@@ -25,6 +27,7 @@ exports.Row = function(id){
 exports.Col = function(id){
   this.id = id;
   this.members = new Set([]);
+  this.squares = [];
 
   this.setMember = function(number){
     this.members.add(number);

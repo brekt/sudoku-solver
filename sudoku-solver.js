@@ -1,13 +1,10 @@
-var input2 = '158.2..6.2...8..9..3..7.8.2.6.74......4.6.7......19.5.4.9.3..2..2..5...8.7..9.413';
-var input = '5.1.83..7...72...........1...8....2..1..5.9....3.....1...9...8..4...75..39.4.....';
+var input = '158.2..6.2...8..9..3..7.8.2.6.74......4.6.7......19.5.4.9.3..2..2..5...8.7..9.413';
+var input2 = '..........7.48..9...4.2.37.1....5..2.....3..7..3...64..4.........631.........891.';
+var input3 = '.94...13..............76..2.8..1.....32.........2...6.....5.4.......8..7..63.4..8';
+var input4 = '............942.8.16.....29........89.6.....14..25......4.......2...8.9..5....7..';
 
 var Sudoku = require('./sudoku');
 
-var sudoku = new Sudoku(input);
-console.log("\nBefore - " + sudoku.report() + " answers:");
-sudoku.printPuzzle();
-sudoku.solve();
-console.log("After - " + sudoku.report() + " answers:");
-sudoku.printPuzzle();
-console.log('');
-sudoku.boxPrint();
+var sudoku = new Sudoku(input4);
+
+sudoku.superSolve();

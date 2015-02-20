@@ -5,6 +5,8 @@ var Box = require('./puzzleElements').Box;
 var Row = require('./puzzleElements').Row;
 var Col = require('./puzzleElements').Col;
 
+var Set = require('set');
+
 // This is the puzzle constructor with methods to initialize and solve the puzzle.
 
 function Sudoku(input) {
@@ -42,50 +44,98 @@ function Sudoku(input) {
       rowArray[square.row].setMember(value);
       colArray[square.col].setMember(value);
     }
+    boxArray[square.box].squares.push(square);
+    rowArray[square.box].squares.push(square);
+    colArray[square.box].squares.push(square);
     squareArray.push(square); 
   });
   
 
-  this.solve = function() {
-    var loopCount = 0;
-    while (this.report() < 81 && loopCount < 2) {       // loop over the puzzle until it is solved or no further answers can be found.
+  this.naiveSolve = function() {
+    var changed = true;
+    while (report() < 81 && changed) {       // loop over the puzzle until it is solved or no further answers can be found.
+      changed = false;
       squareArray.forEach(function(square) {           
-	if (square.answer === null) {          // compare unsolved squares with all squares in same row, box, or col that have an answer.
-	  squareArray.forEach(function(checkSquare) {
-	    if (checkSquare.answer !== null && square.possibilities.contains(checkSquare.answer)) { 
-	      if (checkSquare.col === square.col || checkSquare.row === square.row || checkSquare.box === square.box) {
-		square.possibilities.remove(checkSquare.answer);    // if a num is already taken, remove it as a possibility from square
-		loopCount = 0;                                      // if the puzzle has been altered, set loopCount back to zero
+	if ( !square.answer() ) {          // compare unsolved squares with all squares in same row, box, or col that have an answer.
+	  squareArray.some(function(checkSquare) {
+	    if ( ( checkSquare.col === square.col || checkSquare.row === square.row || checkSquare.box === square.box) && checkSquare.answer() ){
+	      if ( square.possibilities.contains( checkSquare.answer() ) ) { 
+		square.possibilities.remove(checkSquare.answer() );    // if a num is already taken, remove it as a possibility from square
+		changed = true;  
+		printPuzzle();
+		if (square.answer()){
+		  boxArray[square.box].setMember(square.answer());
+		  rowArray[square.row].setMember(square.answer());
+		  colArray[square.col].setMember(square.answer());
+		  return true;
+		}
 	      }
-	    }
+	    } return false;
 	  });
-	  var newAnswer = square.squareSolve();                     // set the square's answer if only one possible number remains
-	  if(newAnswer){
-	    boxArray[square.box].setMember(newAnswer);
-	    rowArray[square.row].setMember(newAnswer);
-	    colArray[square.col].setMember(newAnswer);
-	  }
 	}
       });
-      loopCount++;                            // increment loopCount
     }
   };
 
-  this.report = function() {                   //  count and return the number of solved squares
+  this.superSolve = function() {
+    while( report() < 81 ) {
+      this.naiveSolve();
+      this.elementSolve(boxArray);
+      this.elementSolve(rowArray);
+      this.elementSolve(colArray);
+    }
+  };
+
+  this.elementSolve = function(elementArray) {
+    var changed = true;
+    while (report() < 81 && changed) {
+      changed = false;
+      elementArray.forEach(function(element){
+	element.squares.some(function(square){
+	  if ( !square.answer() ) {
+	    var eliminated = new Set([]);
+	    element.squares.forEach(function(otherSquare){
+	      if (square !== otherSquare){
+		eliminated = eliminated.union(otherSquare.possibilities);
+	      }
+	    });
+	    var possible = new Set([1,2,3,4,5,6,7,8,9]).difference(eliminated);
+	    if (possible.size() === 1){
+	      square.possibilities = possible;
+	      changed = true;
+	      printPuzzle();
+	      return true;
+	    }
+	  } return false;
+	});
+      });
+    }
+  };
+
+  this.squareReport = function(index) {
+    console.log(squareArray[index].possibilities);
+  };
+
+  this.fullReport = function(){
+    boxArray.forEach(function(box){
+      console.log(box.members);
+    });
+  };
+
+
+  function report() {                   //  count and return the number of solved squares
     var answerArray = [];
     squareArray.forEach(function(square) {
-      if(square.answer !== null) {
-	answerArray.push(square.answer);
+      if(square.answer()) {
+	answerArray.push(square.answer());
       }
     });
     return answerArray.length;
   };
 
-  this.boxPrint = function() {
-    console.log(boxArray);
-  };
 
-  this.printPuzzle = function() {              // print a nicely formatted sudoku to the console
+  function printPuzzle() {              // print a nicely formatted sudoku to the console
+    console.log(report() + ' cells solved.');
     var row = [];
     var border = "+-------+-------+-------+";
     var rowCount = 3;
@@ -94,7 +144,7 @@ function Sudoku(input) {
 	row.push('|');
       }
       if (row.length < 11) {
-	row.push(square.answer || ' ');
+	row.push(square.answer() || ' ');
       } else {
       	if(rowCount > 2) {
 	  console.log(border);
@@ -103,7 +153,7 @@ function Sudoku(input) {
 	console.log('| ' + row.join(' ') + ' |');
 	row = [];
 	rowCount++;
-	row.push(square.answer || ' ');
+	row.push(square.answer() || ' ');
       }
 
     });
@@ -115,3 +165,9 @@ function Sudoku(input) {
 }
 
 module.exports = Sudoku;
+
+/*
+	    boxArray[square.box].setMember(square.answer());
+	    rowArray[square.row].setMember(square.answer());
+	    colArray[square.col].setMember(square.answer());
+*/
