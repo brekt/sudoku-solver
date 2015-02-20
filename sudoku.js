@@ -57,8 +57,8 @@ function Sudoku(inputString) {
       colArray[cell.col].setMember(value);
     }
     boxArray[cell.box].cells.push(cell);
-    rowArray[cell.box].cells.push(cell);
-    colArray[cell.box].cells.push(cell);
+    rowArray[cell.row].cells.push(cell);
+    colArray[cell.col].cells.push(cell);
     cellArray.push(cell); 
   });
   
@@ -76,7 +76,7 @@ function Sudoku(inputString) {
 	if ( !currentCell.answer() ) {      
 
 	  // compare the currentCell with all other cells in the same row, column, or box
-	  
+
 	  getRelatedCells(currentCell).some(function(otherCell) {
 
 	    // if the cell is solved and the solution remains as a possibility
@@ -100,7 +100,6 @@ function Sudoku(inputString) {
 	}
       });
     }
-    printPuzzle();
   };
 
   this.solve = function() {
@@ -175,12 +174,13 @@ function Sudoku(inputString) {
   // return a set of all the cells in the same row, column, or box as the given cell
 
   function getRelatedCells(cell) {
-    var related =  boxArray[cell.box].cells
-      .concat(rowArray[cell.row].cells)
-      .concat(colArray[cell.col].cells);
-    return related.filter(function(related){
-      return related.index !== cell.index;
+    var related = rowArray[cell.row].cells.concat(colArray[cell.col].cells).filter(function(relatedCell) {
+      return relatedCell.index !== cell.index;
     });
+
+    return related.concat(boxArray[cell.box].cells.filter(function(relatedCell){
+      return relatedCell.index !== cell.index && relatedCell.row !== cell.row && relatedCell.col !== cell.col;
+    }));
   }
 
   function setMember(cell) {
