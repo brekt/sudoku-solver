@@ -4,6 +4,7 @@ var Cell = require('./cell');
 var Nonet = require('./nonet');
 var Set = require('set');
 
+var Combinatorics = require('js-combinatorics').Combinatorics;
 
 // The Sudoku constructor initializes the puzzle with an input string
 // and has methods to solve and print the puzzle.
@@ -26,12 +27,9 @@ function Sudoku(inputString) {
   var colArray = [];
 
   for (var i = 0; i < 9; i++) {
-    var box = new Nonet;
-    var row = new Nonet;
-    var col = new Nonet;
-    boxArray.push(box);
-    rowArray.push(row);
-    colArray.push(col);
+    boxArray.push(new Nonet);
+    rowArray.push(new Nonet);
+    colArray.push(new Nonet);
   }
 
   // split input into array w/ answers where present and null otherwise
@@ -60,6 +58,8 @@ function Sudoku(inputString) {
 
   var allNonets = boxArray.concat(rowArray).concat(colArray);
   
+  // loop over all cells and solve those with only one possibility
+
   this.basicSolve = function() {
 
     // loop over the puzzle until it is solved or no further answers can be found.
@@ -146,19 +146,44 @@ function Sudoku(inputString) {
     });
   };
 
-  this.solve = function() {
-    printPuzzle();
-    while( numSolved() < 81 ) {
-      this.basicSolve();
-      this.nonetSolve(boxArray);
-      this.nonetSolve(rowArray);
-      this.nonetSolve(colArray);
-      this.nakedPairs();
-      printPuzzle();
-    }
+  // solve for naked triples
+
+  this.nakedTriples = function() {
+
+    // loop over all nonets (groups of nine cells)
+
+    allNonets.forEach(function(nonet) {
+
+      // find all triplets of indices 0 - 8
+
+      var triples = Combinatorics.combination([0,1,2,3,4,5,6,7,8], 3);
+      var triple;
+
+      // for each triplet, see if the union of all possibilities is only 3 numbers
+
+      while((triple = triples.next())) {
+	var totalPossibles = nonet.cells[triple[0]].possibles
+	.union(nonet.cells[triple[1]].possibles)
+	.union(nonet.cells[triple[2]].possibles);
+
+	// if so, remove those three numbers as possibles from the other six cells
+
+	if (totalPossibles.size() === 3) {
+	  nonet.cells.forEach(function(cell, index){
+	    if(index !== triple[0] && index !== triple[1] && index !== triple[2]) {
+	      cell.removePossible(totalPossibles.get()[0]);
+	      cell.removePossible(totalPossibles.get()[1]);
+	      cell.removePossible(totalPossibles.get()[2]);
+	    }
+	  });
+	}
+      }
+
+    });
+    
   };
 
-  this.nonetSolve = function(nonetArray) {
+  this.nonetSolve = function() {
 
     // loop over the given nonets until the puzzle is
     // solved or no further answers can be found.
@@ -169,11 +194,11 @@ function Sudoku(inputString) {
 
       // loop over each nonet
 
-      nonetArray.forEach(function(nonet){
+      allNonets.forEach(function(nonet){
 
 	// loop over each unsolved cell within a nonet
 
-	nonet.cells.some(function(currentCell){
+	nonet.cells.forEach(function(currentCell){
 	  if ( !currentCell.answer() ) {
 
 	    // create a new set of all remaining possibilites in the nonet
@@ -193,7 +218,7 @@ function Sudoku(inputString) {
 
 	    // if there is only one answer that can't possibly be anywhere else
 	    // in the nonet it must belong in the current cell.
-	    // in that case indicate a change and break out of the loop.
+	    // in that case indicate a change.
 
 	    if (impossibles.size() === 1){
 	      currentCell.possibles = impossibles;
@@ -201,14 +226,23 @@ function Sudoku(inputString) {
 		relatedCell.removePossible(currentCell.answer());
 	      });
 	      changed = true;
-	      return true;
 	    }
-	  } return false;
+	  }
 	});
       });
     }
   };
 
+  this.solve = function() {
+    printPuzzle();
+    while( numSolved() < 81 ) {
+      this.basicSolve();
+      this.nonetSolve();
+      this.nakedPairs();
+      this.nakedTriples();
+      printPuzzle();
+    }
+  };
 
   // return a set of all the cells in the same row, column, or box as the given cell
 

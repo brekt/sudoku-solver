@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/mikeatgl/sudoku-solver",
   "dependencies": {
+    "js-combinatorics": "^0.4.0",
     "set": "^1.1.1"
   }
 }
