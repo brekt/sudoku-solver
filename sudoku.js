@@ -58,6 +58,7 @@ function Sudoku(inputString) {
     cellArray.push(cell); 
   });
 
+  var allNonets = boxArray.concat(rowArray).concat(colArray);
   
   this.basicSolve = function() {
 
@@ -99,10 +100,50 @@ function Sudoku(inputString) {
     }
   };
 
+  // solve for naked pairs
+
   this.nakedPairs = function() {
-    
-    
-    
+
+    // loop over all nonets (groups of nine cells)
+
+    allNonets.forEach(function(nonet) {
+
+      // within each nonet, pull out cells with only 2 possibles
+
+      var potentials = nonet.cells.filter(function(cell){
+	return cell.possibles.size() === 2;
+      });
+      
+      // if there is more than one cell with only two possibles left, continue
+
+      if (potentials.length > 1) {
+	
+	potentials.forEach(function(cellOne, indexOne) {
+	  
+	  // for each cell with two possibles, find all cells with the same two possibles
+
+	  var matches = potentials.filter(function(cellTwo, indexTwo) {
+	    return cellTwo.possibles.union(cellOne.possibles).size() === 2 && indexOne !== indexTwo;
+	  });
+
+	  // if there is only one cell with the same two possibles, you have a naked pair
+	  // remove those two numbers from the possibles of the other cells in the nonet
+
+	  if (matches.length === 1) {
+	    var pair = matches[0].possibles.get();
+	    nonet.cells.forEach(function(cell){
+	      cell.removePossible(pair[0]);
+	      cell.removePossible(pair[1]);
+	    });
+	    matches[0].possibles.add(pair[0]);
+	    matches[0].possibles.add(pair[1]);
+	    cellOne.possibles.add(pair[0]);
+	    cellOne.possibles.add(pair[1]);
+	  }
+
+	});
+      }
+    });
   };
 
   this.solve = function() {
@@ -112,9 +153,9 @@ function Sudoku(inputString) {
       this.nonetSolve(boxArray);
       this.nonetSolve(rowArray);
       this.nonetSolve(colArray);
+      this.nakedPairs();
       printPuzzle();
     }
-
   };
 
   this.nonetSolve = function(nonetArray) {
@@ -126,16 +167,16 @@ function Sudoku(inputString) {
     while (numSolved() < 81 && changed) {
       changed = false;
 
-      // loop over each cell collection 
+      // loop over each nonet
 
       nonetArray.forEach(function(nonet){
 
-	// loop over each unsolved cell within a collection
+	// loop over each unsolved cell within a nonet
 
 	nonet.cells.some(function(currentCell){
 	  if ( !currentCell.answer() ) {
 
-	    // create a new set of all remaining possibilites in the collection
+	    // create a new set of all remaining possibilites in the nonet
 	    // besides those from the currentCell
 
 	    var allPossibles = new Set([]);
@@ -146,12 +187,12 @@ function Sudoku(inputString) {
 	    });
 
 	    // create a new set comprising all the answers that can't possibly be
-	    // in any other cell in the collection
+	    // in any other cell in the nonet
 
 	    var impossibles = new Set([1,2,3,4,5,6,7,8,9]).difference(allPossibles);
 
 	    // if there is only one answer that can't possibly be anywhere else
-	    // in the collection it must belong in the current cell.
+	    // in the nonet it must belong in the current cell.
 	    // in that case indicate a change and break out of the loop.
 
 	    if (impossibles.size() === 1){
