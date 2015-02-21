@@ -1,7 +1,7 @@
 // this is the sudoku module
 
 var Cell = require('./cell');
-var CellCollection = require('./cellCollection');
+var Nonet = require('./nonet');
 var Set = require('set');
 
 
@@ -26,9 +26,9 @@ function Sudoku(inputString) {
   var colArray = [];
 
   for (var i = 0; i < 9; i++) {
-    var box = new CellCollection(i);
-    var row = new CellCollection(i);
-    var col = new CellCollection(i);
+    var box = new Nonet;
+    var row = new Nonet;
+    var col = new Nonet;
     boxArray.push(box);
     rowArray.push(row);
     colArray.push(col);
@@ -51,16 +51,13 @@ function Sudoku(inputString) {
 
   cellValues.forEach(function(value, index) {  
     var cell = new Cell(value, index);
-    if(value){
-      boxArray[cell.box].setMember(value);
-      rowArray[cell.row].setMember(value);
-      colArray[cell.col].setMember(value);
-    }
-    boxArray[cell.box].cells.push(cell);
-    rowArray[cell.row].cells.push(cell);
-    colArray[cell.col].cells.push(cell);
+
+    boxArray[cell.box].add(cell);
+    rowArray[cell.row].add(cell);
+    colArray[cell.col].add(cell);
     cellArray.push(cell); 
   });
+
   
   this.basicSolve = function() {
 
@@ -84,14 +81,14 @@ function Sudoku(inputString) {
 	    // has been changed.
 
 	    if ( otherCell.answer() && currentCell.isPossible( otherCell.answer() ) ) { 
-	      currentCell.removePossibility( otherCell.answer() );  
+	      currentCell.removePossible( otherCell.answer() );  
 	      changed = true;  
 	      
 	      // if currentCell has now been solved break out of loop
 	      // and remove that possibility from all related cells
 	      if ( currentCell.answer() ){
 		getRelatedCells(currentCell).forEach(function(relatedCell){
-		  relatedCell.removePossibility(currentCell.answer());
+		  relatedCell.removePossible(currentCell.answer());
 		});
 		return true;
 	      }
@@ -102,20 +99,27 @@ function Sudoku(inputString) {
     }
   };
 
+  this.nakedPairs = function() {
+    
+    
+    
+  };
+
   this.solve = function() {
     printPuzzle();
     while( numSolved() < 81 ) {
       this.basicSolve();
-      this.cellCollectionSolve(boxArray);
-      this.cellCollectionSolve(rowArray);
-      this.cellCollectionSolve(colArray);
+      this.nonetSolve(boxArray);
+      this.nonetSolve(rowArray);
+      this.nonetSolve(colArray);
+      printPuzzle();
     }
-    printPuzzle();
+
   };
 
-  this.cellCollectionSolve = function(cellCollectionArray) {
+  this.nonetSolve = function(nonetArray) {
 
-    // loop over the given cellCollections until the puzzle is
+    // loop over the given nonets until the puzzle is
     // solved or no further answers can be found.
 
     var changed = true;
@@ -124,18 +128,18 @@ function Sudoku(inputString) {
 
       // loop over each cell collection 
 
-      cellCollectionArray.forEach(function(cellCollection){
+      nonetArray.forEach(function(nonet){
 
 	// loop over each unsolved cell within a collection
 
-	cellCollection.cells.some(function(currentCell){
+	nonet.cells.some(function(currentCell){
 	  if ( !currentCell.answer() ) {
 
 	    // create a new set of all remaining possibilites in the collection
 	    // besides those from the currentCell
 
 	    var allPossibles = new Set([]);
-	    cellCollection.cells.forEach(function(otherCell){
+	    nonet.cells.forEach(function(otherCell){
 	      if (currentCell.index !== otherCell.index){
 		allPossibles = allPossibles.union(otherCell.possibles);
 	      }
@@ -152,6 +156,9 @@ function Sudoku(inputString) {
 
 	    if (impossibles.size() === 1){
 	      currentCell.possibles = impossibles;
+	      getRelatedCells(currentCell).forEach(function(relatedCell){
+		relatedCell.removePossible(currentCell.answer());
+	      });
 	      changed = true;
 	      return true;
 	    }
@@ -161,15 +168,6 @@ function Sudoku(inputString) {
     }
   };
 
-  this.cellReport = function(index) {
-    console.log(cellArray[index].possibles);
-  };
-
-  this.fullReport = function(){
-    boxArray.forEach(function(box){
-      console.log(box.members);
-    });
-  };
 
   // return a set of all the cells in the same row, column, or box as the given cell
 
@@ -181,12 +179,6 @@ function Sudoku(inputString) {
     return related.concat(boxArray[cell.box].cells.filter(function(relatedCell){
       return relatedCell.index !== cell.index && relatedCell.row !== cell.row && relatedCell.col !== cell.col;
     }));
-  }
-
-  function setMember(cell) {
-    boxArray[cell.box].setMember(cell.answer());
-    rowArray[cell.row].setMember(cell.answer());
-    colArray[cell.col].setMember(cell.answer());
   }
 
   //  count and return the number of solved cells

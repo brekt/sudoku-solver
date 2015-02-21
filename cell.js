@@ -25,7 +25,7 @@ module.exports = function Cell(solution, index) {
     } else return false;
   };
 
-  this.removePossibility = function(number){
+  this.removePossible = function(number){
     this.possibles.remove(number);
   };
 
@@ -38,5 +38,5 @@ module.exports = function Cell(solution, index) {
   };
 
   return this;
-}
+};
 
