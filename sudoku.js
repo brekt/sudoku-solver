@@ -132,15 +132,11 @@ function Sudoku(inputString) {
 	  if (matches.length === 1) {
 	    var pair = matches[0].possibles.get();
 	    nonet.cells.forEach(function(cell){
-	      cell.removePossible(pair[0]);
-	      cell.removePossible(pair[1]);
+	      cell.removePossible(pair[0], pair[1]);
 	    });
-	    matches[0].possibles.add(pair[0]);
-	    matches[0].possibles.add(pair[1]);
-	    cellOne.possibles.add(pair[0]);
-	    cellOne.possibles.add(pair[1]);
+	    matches[0].possibles.add(pair[0], pair[1]);
+	    cellOne.possibles.add(pair[0], pair[1]);
 	  }
-
 	});
       }
     });
@@ -171,16 +167,44 @@ function Sudoku(inputString) {
 	if (totalPossibles.size() === 3) {
 	  nonet.cells.forEach(function(cell, index){
 	    if(index !== triple[0] && index !== triple[1] && index !== triple[2]) {
-	      cell.removePossible(totalPossibles.get()[0]);
-	      cell.removePossible(totalPossibles.get()[1]);
-	      cell.removePossible(totalPossibles.get()[2]);
+	      cell.removePossible.apply(totalPossibles.get());
 	    }
 	  });
 	}
       }
-
     });
-    
+  };
+
+  this.nakedQuads = function() {
+
+    // loop over all nonets (groups of nine cells)
+
+    allNonets.forEach(function(nonet) {
+
+      // find all quads of indices 0 - 8
+
+      var quads = Combinatorics.combination([0,1,2,3,4,5,6,7,8], 4);
+      var quad;
+
+      // for each quad, see if the union of all possibilities is only 4 numbers
+
+      while((quad = quads.next())) {
+	var totalPossibles = nonet.cells[quad[0]].possibles
+	.union(nonet.cells[quad[1]].possibles)
+	.union(nonet.cells[quad[2]].possibles)
+	.union(nonet.cells[quad[3]].possibles);
+
+	// if so, remove those four numbers as possibles from the other five cells
+
+	if (totalPossibles.size() === 4) {
+	  nonet.cells.forEach(function(cell, index){
+	    if(index !== quad[0] && index !== quad[1] && index !== quad[2] && index !== quad[3]) {
+	      cell.removePossible.apply(totalPossibles.get());
+	    }
+	  });
+	}
+      }
+    });
   };
 
   this.nonetSolve = function() {
@@ -240,6 +264,7 @@ function Sudoku(inputString) {
       this.nonetSolve();
       this.nakedPairs();
       this.nakedTriples();
+      this.nakedQuads();
       printPuzzle();
     }
   };

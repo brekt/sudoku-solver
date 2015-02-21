@@ -6,7 +6,7 @@ var input5 = '..2.46.....4.8...5.7..3...9.....2...3.57.....7.....4....6....93...
 
 var Sudoku = require('./sudoku');
 
-var sudoku = new Sudoku(input2);
+var sudoku = new Sudoku(input5);
 
 sudoku.solve();
 

@@ -25,8 +25,10 @@ module.exports = function Cell(solution, index) {
     } else return false;
   };
 
-  this.removePossible = function(number){
-    this.possibles.remove(number);
+  this.removePossible = function(){
+    for( var i = 0; i < arguments.length; i++){
+      this.possibles.remove(arguments[i]);
+    }
   };
 
   // if only one possibility remains, return it, else return null
