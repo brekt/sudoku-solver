@@ -35,7 +35,7 @@ module.exports = function Cell(solution, index) {
 
   this.answer = function() {  
     if (this.possibles.size() === 1) {
-      return this.possibles.get()[0];
+      return parseInt(this.possibles.get()[0]);
     } else return null;
   };
 

@@ -132,10 +132,10 @@ function Sudoku(inputString) {
 	  if (matches.length === 1) {
 	    var pair = matches[0].possibles.get();
 	    nonet.cells.forEach(function(cell){
-	      cell.removePossible(pair[0], pair[1]);
+	      cell.removePossible.apply(cell, pair);
 	    });
-	    matches[0].possibles.add(pair[0], pair[1]);
-	    cellOne.possibles.add(pair[0], pair[1]);
+	    matches[0].possibles.add.apply(matches[0].possibles, pair);
+	    cellOne.possibles.add.apply(cellOne.possibles, pair);
 	  }
 	});
       }
@@ -167,7 +167,7 @@ function Sudoku(inputString) {
 	if (totalPossibles.size() === 3) {
 	  nonet.cells.forEach(function(cell, index){
 	    if(index !== triple[0] && index !== triple[1] && index !== triple[2]) {
-	      cell.removePossible.apply(totalPossibles.get());
+	      cell.removePossible.apply(cell, totalPossibles.get());
 	    }
 	  });
 	}
@@ -199,7 +199,7 @@ function Sudoku(inputString) {
 	if (totalPossibles.size() === 4) {
 	  nonet.cells.forEach(function(cell, index){
 	    if(index !== quad[0] && index !== quad[1] && index !== quad[2] && index !== quad[3]) {
-	      cell.removePossible.apply(totalPossibles.get());
+	      cell.removePossible.apply(cell, totalPossibles.get());
 	    }
 	  });
 	}

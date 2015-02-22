@@ -4,7 +4,7 @@
   "description": "A sudoku solver written for Portland Code School Javascript Immersion Course",
   "main": "sudoku-solver.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "`npm bin`/jasmine"
   },
   "repository": {
     "type": "git",
@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/mikeatgl/sudoku-solver",
   "dependencies": {
+    "jasmine": "^2.2.1",
     "js-combinatorics": "^0.4.0",
     "set": "^1.1.1"
   }
