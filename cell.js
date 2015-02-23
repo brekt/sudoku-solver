@@ -29,6 +29,9 @@ module.exports = function Cell(solution, index) {
     for( var i = 0; i < arguments.length; i++){
       this.possibles.remove(arguments[i]);
     }
+    if (this.possibles.size() === 0){
+      throw new Error('removed all possibilities from cell ' + this.index);
+    }
   };
 
   // if only one possibility remains, return it, else return null

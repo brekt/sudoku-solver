@@ -14,8 +14,7 @@ function Sudoku(inputString) {
   // check to make sure input string is a complete puzzle
 
   if (inputString.length !== 81) { 
-    console.log('Invalid puzzle string!');
-    return null;
+    throw new Error("Invalid puzzle string!");
   }
 
   // set up the data structures to hold the puzzle info:
@@ -132,10 +131,10 @@ function Sudoku(inputString) {
 	  if (matches.length === 1) {
 	    var pair = matches[0].possibles.get();
 	    nonet.cells.forEach(function(cell){
-	      cell.removePossible.apply(cell, pair);
+	      if(cell.index !== cellOne.index && cell.index !== matches[0].index){
+		cell.removePossible.apply(cell, pair);
+	      }
 	    });
-	    matches[0].possibles.add.apply(matches[0].possibles, pair);
-	    cellOne.possibles.add.apply(cellOne.possibles, pair);
 	  }
 	});
       }
@@ -209,6 +208,8 @@ function Sudoku(inputString) {
 
   this.nonetSolve = function() {
 
+    console.log("inside nonetSolve()");
+
     // loop over the given nonets until the puzzle is
     // solved or no further answers can be found.
 
@@ -218,11 +219,11 @@ function Sudoku(inputString) {
 
       // loop over each nonet
 
-      allNonets.forEach(function(nonet){
+      allNonets.forEach(function(nonet, nonetIndex){
 
 	// loop over each unsolved cell within a nonet
 
-	nonet.cells.forEach(function(currentCell){
+	nonet.cells.forEach(function(currentCell, cellIndex){
 	  if ( !currentCell.answer() ) {
 
 	    // create a new set of all remaining possibilites in the nonet
@@ -257,17 +258,46 @@ function Sudoku(inputString) {
     }
   };
 
+  this.checkCells = function() {
+
+    function cleanUp(cell){
+      boxArray[cell.box].removePossible(cell.answer());
+      rowArray[cell.row].removePossible(cell.answer());
+      colArray[cell.col].removePossible(cell.answer());
+      getRelatedCells(cell).forEach(function(relatedCell){
+	relatedCell.removePossible(cell.answer());
+      });
+    }
+    
+    cellArray.forEach(function(cell) {
+
+      if(cell.answer()) cleanUp(cell);
+      if(!cell.answer()) {
+	cell.possibles = boxArray[cell.box].possibles.intersect(rowArray[cell.row].possibles).intersect(colArray[cell.col].possibles);
+	if(cell.answer()) cleanUp(cell);
+      }
+    });
+  };
+
   this.solve = function() {
     printPuzzle();
     while( numSolved() < 81 ) {
+
       this.basicSolve();
-      this.nonetSolve();
+//      this.nonetSolve();
       this.nakedPairs();
       this.nakedTriples();
       this.nakedQuads();
+      this.checkCells();
       printPuzzle();
     }
   };
+
+  this.solve2 = function() {
+    
+    
+  };
+
 
   // return a set of all the cells in the same row, column, or box as the given cell
 
